@@ -6,11 +6,12 @@ const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 
+
 dotenv.config();
 connectDB();
 
 const app = express();
-
+app.use("/api/attachments", require("./routes/attachmentRoutes"));
 app.use(helmet());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
