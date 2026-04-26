@@ -112,6 +112,7 @@ temp/
 # LOCK FILES (optional - keep if working solo)
 
 # =========================
+uploads/
 
 package-lock.json
 yarn.lock
