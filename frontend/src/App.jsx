@@ -13,6 +13,7 @@ import PendingAgendas from "./pages/admin/PendingAgendas";
 import HeadDashboard from "./pages/head/HeadDashboard";
 import MyAgendas from "./pages/head/MyAgendas";
 import CreateAgenda from "./pages/head/CreateAgenda";
+import AddAgendaUpdate from "./pages/head/AddAgendaUpdate";
 
 export default function App() {
   return (
@@ -30,7 +31,14 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-
+<Route
+  path="/head/agendas/:id/update"
+  element={
+    <ProtectedRoute allowedRoles={["department_head"]}>
+      <AddAgendaUpdate />
+    </ProtectedRoute>
+  }
+/>
       <Route
         path="/admin/departments"
         element={
