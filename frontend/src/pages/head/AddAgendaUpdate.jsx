@@ -21,7 +21,7 @@ export default function AddAgendaUpdate() {
       [e.target.name]: e.target.value,
     }));
   };
-
+const [file, setFile] = useState(null);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -94,6 +94,16 @@ export default function AddAgendaUpdate() {
                 placeholder="Write the full update here..."
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm resize-none"
               />
+              <div>
+  <label className="block text-sm font-semibold text-slate-700 mb-2">
+    Attach File (optional)
+  </label>
+  <input
+    type="file"
+    onChange={(e) => setFile(e.target.files[0])}
+    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm"
+  />
+</div>
             </div>
 
             <button
