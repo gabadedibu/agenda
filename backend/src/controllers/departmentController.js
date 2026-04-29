@@ -127,6 +127,10 @@ exports.createDepartmentWithHead = async (req, res) => {
       entityId: department._id,
       description: `Created ${department.name} and assigned ${head.name} as department head`,
     });
+    const bcrypt = require("bcryptjs");
+const Department = require("../models/Department");
+const User = require("../models/User");
+const AuditLog = require("../models/AuditLog");
 
     res.status(201).json({
       message: "Department and department head created successfully",
