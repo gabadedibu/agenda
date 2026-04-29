@@ -1,14 +1,7 @@
 const express = require("express");
 const protect = require("../middleware/authMiddleware");
 const authorize = require("../middleware/roleMiddleware");
-const {
-  createDepartment,
-  getDepartments,
-  updateDepartment,
-  assignHead,
-} = require("../controllers/departmentController");
 
-const router = express.Router();
 const {
   createDepartment,
   createDepartmentWithHead,
@@ -16,6 +9,8 @@ const {
   updateDepartment,
   assignHead,
 } = require("../controllers/departmentController");
+
+const router = express.Router();
 
 router.use(protect);
 
