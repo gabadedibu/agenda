@@ -134,9 +134,37 @@ export default function AgendaDetails() {
                       {new Date(update.createdAt).toLocaleString()}
                     </p>
 
-                    <p className="text-slate-600 text-sm mt-3 leading-6 whitespace-pre-line">
-                      {update.content}
-                    </p>
+                  <p className="text-slate-600 text-sm mt-3 leading-6 whitespace-pre-line">
+  {update.content}
+</p>
+
+{/* Attachments */}
+{update.attachments && update.attachments.length > 0 && (
+  <div className="mt-3 space-y-2">
+    <p className="text-xs font-bold text-slate-500">
+      Attached Files
+    </p>
+
+    {update.attachments.map((file) => (
+      <a
+        key={file._id}
+        href={`http://localhost:5000/api/attachments/download/${file._id}`}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-center justify-between gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50"
+      >
+        <div className="flex items-center gap-2">
+          <FileText className="w-4 h-4 text-slate-500" />
+          <span className="text-sm text-slate-700">
+            {file.fileName}
+          </span>
+        </div>
+
+        <Download className="w-4 h-4 text-emerald-600" />
+      </a>
+    ))}
+  </div>
+)}
                   </div>
                 ))}
               </div>
