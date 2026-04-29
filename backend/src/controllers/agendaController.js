@@ -242,6 +242,8 @@ exports.getPublicAgendas = async (req, res) => {
 
 exports.getPublicAgendaDetails = async (req, res) => {
   try {
+    const Attachment = require("../models/Attachment");
+
     const agenda = await Agenda.findOne({
       _id: req.params.id,
       status: "approved",
@@ -254,9 +256,27 @@ exports.getPublicAgendaDetails = async (req, res) => {
 
     const updates = await AgendaUpdate.find({ agendaId: agenda._id })
       .populate("createdBy", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
-    res.json({ agenda, updates });
+    const updateIds = updates.map((update) => update._id);
+
+    const updateAttachments = await Attachment.find({
+      updateId: { $in: updateIds },
+      visibility: "public",
+    }).lean();
+
+    const updatesWithAttachments = updates.map((update) => ({
+      ...update,
+      attachments: updateAttachments.filter(
+        (file) => String(file.updateId) === String(update._id)
+      ),
+    }));
+
+    res.json({
+      agenda,
+      updates: updatesWithAttachments,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 import api from "../../api/axios";
 
 export default function AddAgendaUpdate() {
@@ -12,6 +12,7 @@ export default function AddAgendaUpdate() {
     content: "",
   });
 
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,7 +22,7 @@ export default function AddAgendaUpdate() {
       [e.target.name]: e.target.value,
     }));
   };
-const [file, setFile] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -29,7 +30,20 @@ const [file, setFile] = useState(null);
     try {
       setLoading(true);
 
-      await api.post(`/agendas/${id}/updates`, form);
+      const res = await api.post(`/agendas/${id}/updates`, form);
+      const updateId = res.data.update._id;
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("visibility", "public");
+
+        await api.post(`/attachments/update/${updateId}`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      }
 
       alert("Agenda update added successfully");
       navigate("/head/agendas");
@@ -57,7 +71,7 @@ const [file, setFile] = useState(null);
           </h1>
 
           <p className="text-slate-500 text-sm mt-2">
-            Add progress notes, procurement updates, receipts summary, or project status.
+            Add progress notes and optionally attach a receipt, PDF, or image.
           </p>
 
           {error && (
@@ -76,7 +90,7 @@ const [file, setFile] = useState(null);
                 value={form.title}
                 onChange={handleChange}
                 required
-                placeholder="e.g. Procurement of materials completed"
+                placeholder="e.g. Receipt for nails purchased"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm"
               />
             </div>
@@ -94,16 +108,26 @@ const [file, setFile] = useState(null);
                 placeholder="Write the full update here..."
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm resize-none"
               />
-              <div>
-  <label className="block text-sm font-semibold text-slate-700 mb-2">
-    Attach File (optional)
-  </label>
-  <input
-    type="file"
-    onChange={(e) => setFile(e.target.files[0])}
-    className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm"
-  />
-</div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Attach File Optional
+              </label>
+
+              <label className="flex items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:bg-slate-50">
+                <Upload className="w-5 h-5 text-slate-500" />
+                <span className="text-sm text-slate-600">
+                  {file ? file.name : "Choose PDF, PNG, JPG, or JPEG"}
+                </span>
+
+                <input
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(e) => setFile(e.target.files[0])}
+                  className="hidden"
+                />
+              </label>
             </div>
 
             <button
