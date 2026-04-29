@@ -9,10 +9,18 @@ const {
 } = require("../controllers/departmentController");
 
 const router = express.Router();
+const {
+  createDepartment,
+  createDepartmentWithHead,
+  getDepartments,
+  updateDepartment,
+  assignHead,
+} = require("../controllers/departmentController");
 
 router.use(protect);
 
 router.get("/", authorize("admin"), getDepartments);
+router.post("/create-with-head", authorize("admin"), createDepartmentWithHead);
 router.post("/", authorize("admin"), createDepartment);
 router.patch("/:id", authorize("admin"), updateDepartment);
 router.patch("/:id/assign-head", authorize("admin"), assignHead);
