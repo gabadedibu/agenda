@@ -211,6 +211,84 @@ exports.addAgendaUpdate = async (req, res) => {
   }
 };
 
+exports.updateAgendaUpdate = async (req, res) => {
+  try {
+    const update = await AgendaUpdate.findById(req.params.updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    const agenda = await Agenda.findById(update.agendaId);
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Parent agenda not found" });
+    }
+
+    if (String(update.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not allowed to edit this update" });
+    }
+
+    const { title, content } = req.body;
+
+    update.title = title ?? update.title;
+    update.content = content ?? update.content;
+
+    await update.save();
+
+    await AuditLog.create({
+      userId: req.user._id,
+      action: "EDIT_AGENDA_UPDATE",
+      entityType: "AgendaUpdate",
+      entityId: update._id,
+      description: `Edited update on agenda: ${agenda.title}`,
+    });
+
+    res.json({
+      message: "Update edited successfully",
+      update,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAgendaUpdate = async (req, res) => {
+  try {
+    const update = await AgendaUpdate.findById(req.params.updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    const agenda = await Agenda.findById(update.agendaId);
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Parent agenda not found" });
+    }
+
+    if (String(update.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not allowed to delete this update" });
+    }
+
+    await update.deleteOne();
+
+    await AuditLog.create({
+      userId: req.user._id,
+      action: "DELETE_AGENDA_UPDATE",
+      entityType: "AgendaUpdate",
+      entityId: update._id,
+      description: `Deleted update from agenda: ${agenda.title}`,
+    });
+
+    res.json({
+      message: "Update deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getPublicAgendas = async (req, res) => {
   try {
     const { department, priority, search } = req.query;
@@ -239,6 +317,7 @@ exports.getPublicAgendas = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 exports.archiveAgenda = async (req, res) => {
   try {
     const agenda = await Agenda.findById(req.params.id);
@@ -268,6 +347,7 @@ exports.archiveAgenda = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 exports.getPublicAgendaDetails = async (req, res) => {
   try {
     const Attachment = require("../models/Attachment");

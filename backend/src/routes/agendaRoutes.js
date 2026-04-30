@@ -10,11 +10,12 @@ const {
   getAllAgendas,
   reviewAgenda,
   addAgendaUpdate,
+  updateAgendaUpdate,
+  deleteAgendaUpdate,
   getPublicAgendas,
   getPublicAgendaDetails,
   archiveAgenda,
 } = require("../controllers/agendaController");
-
 
 const router = express.Router();
 
@@ -28,6 +29,21 @@ router.get("/my", protect, authorize("department_head"), getMyAgendas);
 router.patch("/:id", protect, authorize("department_head"), updateMyAgenda);
 router.patch("/:id/submit", protect, authorize("department_head"), submitAgenda);
 router.post("/:id/updates", protect, authorize("department_head"), addAgendaUpdate);
+
+// Edit/delete update
+router.patch(
+  "/updates/:updateId",
+  protect,
+  authorize("department_head"),
+  updateAgendaUpdate
+);
+
+router.delete(
+  "/updates/:updateId",
+  protect,
+  authorize("department_head"),
+  deleteAgendaUpdate
+);
 
 // Admin routes
 router.get("/", protect, authorize("admin"), getAllAgendas);
