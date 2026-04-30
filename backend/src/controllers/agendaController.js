@@ -239,7 +239,35 @@ exports.getPublicAgendas = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+exports.archiveAgenda = async (req, res) => {
+  try {
+    const agenda = await Agenda.findById(req.params.id);
 
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
+
+    agenda.status = "archived";
+    agenda.publicVisible = false;
+
+    await agenda.save();
+
+    await AuditLog.create({
+      userId: req.user._id,
+      action: "ARCHIVE_AGENDA",
+      entityType: "Agenda",
+      entityId: agenda._id,
+      description: `Archived agenda: ${agenda.title}`,
+    });
+
+    res.json({
+      message: "Agenda archived successfully",
+      agenda,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 exports.getPublicAgendaDetails = async (req, res) => {
   try {
     const Attachment = require("../models/Attachment");

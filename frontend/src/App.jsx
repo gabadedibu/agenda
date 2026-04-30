@@ -16,6 +16,9 @@ import CreateAgenda from "./pages/head/CreateAgenda";
 import AddAgendaUpdate from "./pages/head/AddAgendaUpdate";
 import HeadProfile from "./pages/head/HeadProfile";
 import EditAgenda from "./pages/head/EditAgenda";
+import AdminLayout from "./components/AdminLayout";
+import HeadLayout from "./components/HeadLayout";
+import AllAgendas from "./pages/admin/AllAgendas";
 
 export default function App() {
   return (
@@ -101,6 +104,34 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+  path="/admin"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route index element={<AdminDashboard />} />
+  <Route path="departments" element={<Departments />} />
+  <Route path="pending-agendas" element={<PendingAgendas />} />
+</Route>
+
+<Route
+  path="/head"
+  element={
+    <ProtectedRoute allowedRoles={["department_head"]}>
+      <HeadLayout />
+    </ProtectedRoute>
+  }
+>
+  <Route index element={<HeadDashboard />} />
+  <Route path="agendas" element={<MyAgendas />} />
+  <Route path="create-agenda" element={<CreateAgenda />} />
+  <Route path="agendas/:id/update" element={<AddAgendaUpdate />} />
+  <Route path="agendas/:id/edit" element={<EditAgenda />} />
+  <Route path="profile" element={<HeadProfile />} />
+</Route>
     </Routes>
     
   );

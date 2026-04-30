@@ -12,7 +12,9 @@ const {
   addAgendaUpdate,
   getPublicAgendas,
   getPublicAgendaDetails,
+  archiveAgenda,
 } = require("../controllers/agendaController");
+
 
 const router = express.Router();
 
@@ -30,5 +32,6 @@ router.post("/:id/updates", protect, authorize("department_head"), addAgendaUpda
 // Admin routes
 router.get("/", protect, authorize("admin"), getAllAgendas);
 router.patch("/:id/review", protect, authorize("admin"), reviewAgenda);
+router.patch("/:id/archive", protect, authorize("admin"), archiveAgenda);
 
 module.exports = router;

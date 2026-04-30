@@ -1,14 +1,15 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  Building2,
-  Clock,
+  ClipboardList,
+  Plus,
+  User,
   Globe,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-export default function AdminLayout() {
+export default function HeadLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -18,17 +19,18 @@ export default function AdminLayout() {
   };
 
   const navItems = [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/admin/departments", label: "Departments", icon: Building2 },
-    { to: "/admin/pending-agendas", label: "Pending Agendas", icon: Clock },
+    { to: "/head", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/head/agendas", label: "My Agendas", icon: ClipboardList },
+    { to: "/head/create-agenda", label: "Create Agenda", icon: Plus },
+    { to: "/head/profile", label: "Profile", icon: User },
     { to: "/agendas", label: "Public Portal", icon: Globe },
   ];
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
       <aside className="hidden md:flex w-64 bg-slate-950 text-white p-5 flex-col">
-        <Link to="/admin" className="text-xl font-bold">
-          Agenda Admin
+        <Link to="/head" className="text-xl font-bold">
+          Department Head
         </Link>
 
         <nav className="mt-8 space-y-2">
@@ -39,7 +41,7 @@ export default function AdminLayout() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === "/admin"}
+                end={item.to === "/head"}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold ${
                     isActive
@@ -66,8 +68,8 @@ export default function AdminLayout() {
 
       <div className="flex-1">
         <div className="md:hidden bg-slate-950 text-white p-4 flex items-center justify-between">
-          <Link to="/admin" className="font-bold">
-            Agenda Admin
+          <Link to="/head" className="font-bold">
+            Department Head
           </Link>
 
           <button onClick={handleLogout} className="text-sm">
@@ -80,7 +82,7 @@ export default function AdminLayout() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === "/admin"}
+              end={item.to === "/head"}
               className={({ isActive }) =>
                 `whitespace-nowrap px-3 py-2 rounded-xl text-xs font-semibold ${
                   isActive

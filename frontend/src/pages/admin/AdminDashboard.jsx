@@ -170,7 +170,7 @@ export default function AdminDashboard() {
               </Link>
 
               <Link
-                to="/agendas"
+                to="/admin/agendas"
                 className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition"
               >
                 <Users className="w-8 h-8 text-emerald-600" />
