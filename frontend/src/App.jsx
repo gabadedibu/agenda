@@ -14,6 +14,7 @@ import HeadDashboard from "./pages/head/HeadDashboard";
 import MyAgendas from "./pages/head/MyAgendas";
 import CreateAgenda from "./pages/head/CreateAgenda";
 import AddAgendaUpdate from "./pages/head/AddAgendaUpdate";
+import HeadProfile from "./pages/head/HeadProfile";
 
 export default function App() {
   return (
@@ -83,6 +84,15 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/head/profile"
+        element={
+          <ProtectedRoute allowedRoles={["department_head"]}>
+            <HeadProfile />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
+    
   );
 }

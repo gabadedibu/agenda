@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Building2, Plus, RefreshCw, UserPlus } from "lucide-react";
+import { Building2, Plus, RefreshCw, UserPlus, Pencil } from "lucide-react";
 import api from "../../api/axios";
 
 export default function Departments() {
@@ -15,6 +15,14 @@ export default function Departments() {
     headName: "",
     headEmail: "",
     temporaryPassword: "",
+  });
+
+  const [editingDepartment, setEditingDepartment] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    code: "",
+    description: "",
+    isActive: true,
   });
 
   const fetchDepartments = async () => {
@@ -46,7 +54,6 @@ export default function Departments() {
 
     try {
       setCreating(true);
-
       await api.post("/departments/create-with-head", form);
 
       setMessage("Department and department head created successfully.");
@@ -68,14 +75,45 @@ export default function Departments() {
     }
   };
 
+  const startEdit = (department) => {
+    setEditingDepartment(department);
+    setEditForm({
+      name: department.name,
+      code: department.code,
+      description: department.description || "",
+      isActive: department.isActive,
+    });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleUpdateDepartment = async (e) => {
+    e.preventDefault();
+
+    try {
+      await api.patch(`/departments/${editingDepartment._id}`, editForm);
+
+      alert("Department updated successfully");
+      setEditingDepartment(null);
+      fetchDepartments();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to update department");
+    }
+  };
+
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              Departments
-            </h1>
+            <h1 className="text-3xl font-bold text-slate-900">Departments</h1>
             <p className="text-slate-500 mt-2">
               Create departments and register department heads.
             </p>
@@ -97,9 +135,7 @@ export default function Departments() {
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="font-bold text-slate-900">
-                  Add Department
-                </h2>
+                <h2 className="font-bold text-slate-900">Add Department</h2>
                 <p className="text-xs text-slate-500">
                   Create department + login account
                 </p>
@@ -113,47 +149,32 @@ export default function Departments() {
             )}
 
             <form onSubmit={handleCreate} className="mt-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Department Name
-                </label>
-                <input
-                  name="departmentName"
-                  value={form.departmentName}
-                  onChange={handleChange}
-                  required
-                  placeholder="Department of Education"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none"
-                />
-              </div>
+              <input
+                name="departmentName"
+                value={form.departmentName}
+                onChange={handleChange}
+                required
+                placeholder="Department Name"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none"
+              />
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Department Code
-                </label>
-                <input
-                  name="departmentCode"
-                  value={form.departmentCode}
-                  onChange={handleChange}
-                  required
-                  placeholder="EDU"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none uppercase"
-                />
-              </div>
+              <input
+                name="departmentCode"
+                value={form.departmentCode}
+                onChange={handleChange}
+                required
+                placeholder="Department Code"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none uppercase"
+              />
 
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  name="departmentDescription"
-                  value={form.departmentDescription}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Short department description"
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none resize-none"
-                />
-              </div>
+              <textarea
+                name="departmentDescription"
+                value={form.departmentDescription}
+                onChange={handleChange}
+                rows="3"
+                placeholder="Short department description"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none resize-none"
+              />
 
               <div className="border-t border-slate-100 pt-4">
                 <p className="text-sm font-bold text-slate-900 mb-3">
@@ -204,16 +225,12 @@ export default function Departments() {
 
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-              <h2 className="font-bold text-slate-900">
-                All Departments
-              </h2>
+              <h2 className="font-bold text-slate-900">All Departments</h2>
 
               {loading ? (
                 <p className="mt-5 text-slate-500">Loading departments...</p>
               ) : departments.length === 0 ? (
-                <p className="mt-5 text-slate-500">
-                  No department created yet.
-                </p>
+                <p className="mt-5 text-slate-500">No department created yet.</p>
               ) : (
                 <div className="mt-5 space-y-3">
                   {departments.map((department) => (
@@ -256,6 +273,14 @@ export default function Departments() {
                         >
                           {department.isActive ? "Active" : "Inactive"}
                         </span>
+
+                        <button
+                          onClick={() => startEdit(department)}
+                          className="mt-3 inline-flex items-center justify-center gap-2 bg-slate-950 text-white px-4 py-2 rounded-xl text-sm font-semibold"
+                        >
+                          <Pencil className="w-4 h-4" />
+                          Edit
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -265,6 +290,69 @@ export default function Departments() {
           </div>
         </section>
       </div>
+
+      {editingDepartment && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-slate-900">
+              Edit Department
+            </h2>
+
+            <form onSubmit={handleUpdateDepartment} className="mt-5 space-y-4">
+              <input
+                name="name"
+                value={editForm.name}
+                onChange={handleEditChange}
+                required
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none"
+                placeholder="Department name"
+              />
+
+              <input
+                name="code"
+                value={editForm.code}
+                onChange={handleEditChange}
+                required
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none uppercase"
+                placeholder="Department code"
+              />
+
+              <textarea
+                name="description"
+                value={editForm.description}
+                onChange={handleEditChange}
+                rows="3"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none resize-none"
+                placeholder="Description"
+              />
+
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  checked={editForm.isActive}
+                  onChange={handleEditChange}
+                />
+                Department is active
+              </label>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingDepartment(null)}
+                  className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold"
+                >
+                  Cancel
+                </button>
+
+                <button className="flex-1 bg-slate-950 text-white py-3 rounded-xl font-semibold">
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
