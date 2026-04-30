@@ -180,6 +180,14 @@ export default function MyAgendas() {
 
                   <div className="mt-5 flex gap-3">
                     {canSubmit && (
+  <Link
+    to={`/head/agendas/${agenda._id}/edit`}
+    className="flex-1 inline-flex items-center justify-center bg-slate-100 text-slate-700 px-4 py-3 rounded-xl font-semibold"
+  >
+    Edit
+  </Link>
+)}
+                    {canSubmit && (
                       <button
                         disabled={submitLoading === agenda._id}
                         onClick={() => submitAgenda(agenda._id)}

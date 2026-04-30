@@ -15,6 +15,7 @@ import MyAgendas from "./pages/head/MyAgendas";
 import CreateAgenda from "./pages/head/CreateAgenda";
 import AddAgendaUpdate from "./pages/head/AddAgendaUpdate";
 import HeadProfile from "./pages/head/HeadProfile";
+import EditAgenda from "./pages/head/EditAgenda";
 
 export default function App() {
   return (
@@ -89,6 +90,14 @@ export default function App() {
         element={
           <ProtectedRoute allowedRoles={["department_head"]}>
             <HeadProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/head/agendas/:id/edit"
+        element={
+          <ProtectedRoute allowedRoles={["department_head"]}>
+            <EditAgenda />
           </ProtectedRoute>
         }
       />
