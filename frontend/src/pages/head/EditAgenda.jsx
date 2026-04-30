@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios";
 import BackButton from "../../components/BackButton";
+
 export default function EditAgenda() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -79,19 +79,11 @@ export default function EditAgenda() {
   };
 
   if (loading) return <main className="p-6">Loading agenda...</main>;
-  <BackButton />
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
-        <BackButton label="Back to my agendas" />
       <div className="max-w-3xl mx-auto">
-        <Link
-          to="/head/agendas"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to my agendas
-        </Link>
+        <BackButton />
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
           <h1 className="text-2xl font-bold text-slate-900">Edit Agenda</h1>
