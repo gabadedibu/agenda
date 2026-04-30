@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload } from "lucide-react";
 import api from "../../api/axios";
-
+import BackButton from "../../components/BackButton";
 export default function AddAgendaUpdate() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -57,6 +57,7 @@ export default function AddAgendaUpdate() {
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-3xl mx-auto">
+        <BackButton label="Back to my agendas" />
         <Link
           to="/head/agendas"
           className="inline-flex items-center gap-2 text-sm text-slate-500 mb-6"

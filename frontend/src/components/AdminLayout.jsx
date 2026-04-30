@@ -1,9 +1,9 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Building2,
+  ClipboardList,
   Clock,
-  Globe,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -17,85 +17,57 @@ export default function AdminLayout() {
     navigate("/login");
   };
 
-  const navItems = [
-    { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/admin/departments", label: "Departments", icon: Building2 },
-    { to: "/admin/pending-agendas", label: "Pending Agendas", icon: Clock },
-    { to: "/agendas", label: "Public Portal", icon: Globe },
-  ];
-
   return (
     <div className="min-h-screen bg-slate-50 flex">
-      <aside className="hidden md:flex w-64 bg-slate-950 text-white p-5 flex-col">
-        <Link to="/admin" className="text-xl font-bold">
-          Agenda Admin
-        </Link>
+      <aside className="w-64 bg-slate-950 text-white min-h-screen p-5 hidden md:flex flex-col fixed left-0 top-0 bottom-0">
+        <h1 className="text-xl font-bold mb-8">Admin Panel</h1>
 
-        <nav className="mt-8 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+        <nav className="space-y-2 flex-1">
+          <Link
+            to="/admin"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10"
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            Dashboard
+          </Link>
 
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/admin"}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold ${
-                    isActive
-                      ? "bg-emerald-500 text-white"
-                      : "text-slate-300 hover:bg-white/10"
-                  }`
-                }
-              >
-                <Icon className="w-5 h-5" />
-                {item.label}
-              </NavLink>
-            );
-          })}
+          <Link
+            to="/admin/departments"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10"
+          >
+            <Building2 className="w-5 h-5" />
+            Departments
+          </Link>
+
+          <Link
+            to="/admin/pending-agendas"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10"
+          >
+            <Clock className="w-5 h-5" />
+            Pending Reviews
+          </Link>
+
+          <Link
+            to="/admin/agendas"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/10"
+          >
+            <ClipboardList className="w-5 h-5" />
+            All Agendas
+          </Link>
         </nav>
 
         <button
           onClick={handleLogout}
-          className="mt-auto flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-300 hover:bg-white/10"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/20 text-red-200"
         >
           <LogOut className="w-5 h-5" />
           Logout
         </button>
       </aside>
 
-      <div className="flex-1">
-        <div className="md:hidden bg-slate-950 text-white p-4 flex items-center justify-between">
-          <Link to="/admin" className="font-bold">
-            Agenda Admin
-          </Link>
-
-          <button onClick={handleLogout} className="text-sm">
-            Logout
-          </button>
-        </div>
-
-        <div className="md:hidden bg-white border-b border-slate-200 p-3 flex gap-2 overflow-x-auto">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/admin"}
-              className={({ isActive }) =>
-                `whitespace-nowrap px-3 py-2 rounded-xl text-xs font-semibold ${
-                  isActive
-                    ? "bg-slate-950 text-white"
-                    : "bg-slate-100 text-slate-700"
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </div>
-
+      <main className="flex-1 md:ml-64">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }
