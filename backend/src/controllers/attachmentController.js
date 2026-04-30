@@ -131,10 +131,44 @@ exports.getAgendaAttachments = async (req, res) => {
   }
 };
 
+exports.previewAttachment = async (req, res) => {
+  try {
+    const attachment = await Attachment.findById(req.params.attachmentId).populate("agendaId");
+
+    if (!attachment) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    const agenda = attachment.agendaId;
+
+    const isPublicFile =
+      attachment.visibility === "public" &&
+      agenda &&
+      agenda.status === "approved" &&
+      agenda.publicVisible;
+
+    if (!isPublicFile && !req.user) {
+      return res.status(401).json({ message: "Login required to access this file" });
+    }
+
+    const filePath = path.join(__dirname, "../..", attachment.fileUrl);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Physical file missing" });
+    }
+
+    res.setHeader("Content-Type", attachment.fileType);
+    res.setHeader("Content-Disposition", `inline; filename="${attachment.fileName}"`);
+
+    res.sendFile(filePath);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.downloadAttachment = async (req, res) => {
   try {
-    const attachment = await Attachment.findById(req.params.attachmentId)
-      .populate("agendaId");
+    const attachment = await Attachment.findById(req.params.attachmentId).populate("agendaId");
 
     if (!attachment) {
       return res.status(404).json({ message: "File not found" });

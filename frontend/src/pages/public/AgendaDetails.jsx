@@ -7,6 +7,7 @@ import {
   FileText,
   Clock,
   ArrowLeft,
+  Eye,
 } from "lucide-react";
 import api from "../../api/axios";
 
@@ -16,6 +17,8 @@ export default function AgendaDetails() {
   const [updates, setUpdates] = useState([]);
   const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const fileBaseUrl = import.meta.env.VITE_API_URL;
 
   const fetchDetails = async () => {
     try {
@@ -54,11 +57,45 @@ export default function AgendaDetails() {
     );
   }
 
+  const FileActions = ({ file }) => (
+    <div className="flex items-center justify-between gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50">
+      <div className="flex items-center gap-2 min-w-0">
+        <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
+        <span className="text-sm text-slate-700 truncate">
+          {file.fileName}
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <a
+          href={`${fileBaseUrl}/attachments/preview/${file._id}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-lg"
+        >
+          <Eye className="w-3.5 h-3.5" />
+          Preview
+        </a>
+
+        <a
+          href={`${fileBaseUrl}/attachments/download/${file._id}`}
+          className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-2 rounded-lg"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Download
+        </a>
+      </div>
+    </div>
+  );
+
   return (
     <main className="min-h-screen bg-slate-50">
       <section className="bg-slate-950 text-white px-6 py-10">
         <div className="max-w-5xl mx-auto">
-          <Link to="/agendas" className="inline-flex items-center gap-2 text-emerald-400 text-sm">
+          <Link
+            to="/agendas"
+            className="inline-flex items-center gap-2 text-emerald-400 text-sm"
+          >
             <ArrowLeft className="w-4 h-4" />
             Back to agendas
           </Link>
@@ -89,9 +126,7 @@ export default function AgendaDetails() {
                   : "No proposed date"}
               </span>
 
-              <span className="capitalize">
-                Priority: {agenda.priority}
-              </span>
+              <span className="capitalize">Priority: {agenda.priority}</span>
             </div>
           </div>
         </div>
@@ -121,7 +156,10 @@ export default function AgendaDetails() {
             ) : (
               <div className="mt-6 space-y-5">
                 {updates.map((update) => (
-                  <div key={update._id} className="relative pl-8 pb-5 border-l border-slate-200">
+                  <div
+                    key={update._id}
+                    className="relative pl-8 pb-5 border-l border-slate-200"
+                  >
                     <div className="absolute -left-3 top-0 w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center">
                       <Clock className="w-3.5 h-3.5 text-emerald-700" />
                     </div>
@@ -134,37 +172,21 @@ export default function AgendaDetails() {
                       {new Date(update.createdAt).toLocaleString()}
                     </p>
 
-                  <p className="text-slate-600 text-sm mt-3 leading-6 whitespace-pre-line">
-  {update.content}
-</p>
+                    <p className="text-slate-600 text-sm mt-3 leading-6 whitespace-pre-line">
+                      {update.content}
+                    </p>
 
-{/* Attachments */}
-{update.attachments && update.attachments.length > 0 && (
-  <div className="mt-3 space-y-2">
-    <p className="text-xs font-bold text-slate-500">
-      Attached Files
-    </p>
+                    {update.attachments && update.attachments.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-bold text-slate-500">
+                          Attached Files
+                        </p>
 
-    {update.attachments.map((file) => (
-      <a
-        key={file._id}
-        href={`http://localhost:5000/api/attachments/download/${file._id}`}
-        target="_blank"
-        rel="noreferrer"
-        className="flex items-center justify-between gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50"
-      >
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-slate-500" />
-          <span className="text-sm text-slate-700">
-            {file.fileName}
-          </span>
-        </div>
-
-        <Download className="w-4 h-4 text-emerald-600" />
-      </a>
-    ))}
-  </div>
-)}
+                        {update.attachments.map((file) => (
+                          <FileActions key={file._id} file={file} />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -174,9 +196,7 @@ export default function AgendaDetails() {
 
         <aside className="space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="font-bold text-slate-900">
-              Downloads
-            </h2>
+            <h2 className="font-bold text-slate-900">Downloads</h2>
 
             {attachments.length === 0 ? (
               <p className="text-sm text-slate-500 mt-3">
@@ -185,20 +205,7 @@ export default function AgendaDetails() {
             ) : (
               <div className="mt-4 space-y-3">
                 {attachments.map((file) => (
-                  <a
-                    key={file._id}
-                    href={`http://localhost:5000/api/attachments/download/${file._id}`}
-                    className="flex items-center justify-between gap-3 border border-slate-200 rounded-xl p-3 hover:bg-slate-50"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <FileText className="w-5 h-5 text-slate-500" />
-                      <span className="text-sm text-slate-700 truncate">
-                        {file.fileName}
-                      </span>
-                    </div>
-
-                    <Download className="w-4 h-4 text-emerald-600" />
-                  </a>
+                  <FileActions key={file._id} file={file} />
                 ))}
               </div>
             )}

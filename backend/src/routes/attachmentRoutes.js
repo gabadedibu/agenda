@@ -2,11 +2,13 @@ const express = require("express");
 const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
+
 const {
   uploadAgendaAttachment,
   uploadUpdateAttachment,
   getAgendaAttachments,
   downloadAttachment,
+  previewAttachment,
 } = require("../controllers/attachmentController");
 
 const router = express.Router();
@@ -26,7 +28,8 @@ router.post(
 );
 
 router.get("/agenda/:agendaId", getAgendaAttachments);
-
+router.get("/preview/:attachmentId", previewAttachment);
 router.get("/download/:attachmentId", downloadAttachment);
+
 
 module.exports = router;
