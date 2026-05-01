@@ -194,7 +194,7 @@ export default function AgendaDetails() {
           </div>
         </div>
 
-        <aside className="space-y-6">
+        {/* <aside className="space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-5">
             <h2 className="font-bold text-slate-900">Downloads</h2>
 
@@ -210,7 +210,7 @@ export default function AgendaDetails() {
               </div>
             )}
           </div>
-        </aside>
+        </aside> */}
       </section>
     </main>
   );

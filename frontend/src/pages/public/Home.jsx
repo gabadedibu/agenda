@@ -13,7 +13,7 @@ export default function Home() {
             <img
               src={logo}
               alt="Logo"
-              className="w-20 h-20 object-contain"
+              className="w-26 h-26 object-contain"
             />
 
             {/* Optional name beside logo */}
@@ -34,7 +34,7 @@ export default function Home() {
       {/* HERO */}
       <section className="max-w-6xl mx-auto px-6 py-20 text-center">
         <h1 className="text-3xl md:text-5xl font-bold text-slate-900 max-w-3xl mx-auto">
-          Public Departmental Agenda Portal
+          Strategic Agenda Portal
         </h1>
 
         <p className="text-slate-600 mt-5 max-w-2xl mx-auto leading-7">
