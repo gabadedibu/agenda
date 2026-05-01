@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo.png"; 
 
 export default function Home() {
   return (
@@ -7,12 +7,19 @@ export default function Home() {
       {/* NAV */}
       <nav className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* LOGO AREA */}
+          
+          {/* LOGO */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm">
-             <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
-            </div>
-         
+            <img
+              src={logo}
+              alt="Logo"
+              className="w-12 h-12 object-contain"
+            />
+
+            {/* Optional name beside logo */}
+            <span className="font-bold text-slate-900 text-lg hidden sm:block">
+              Agenda Portal
+            </span>
           </div>
 
           <Link
@@ -26,13 +33,6 @@ export default function Home() {
 
       {/* HERO */}
       <section className="max-w-6xl mx-auto px-6 py-20 text-center">
-        {/* LOGO BIG */}
-        <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-lg font-bold">
-            
-          </div>
-        </div>
-
         <h1 className="text-3xl md:text-5xl font-bold text-slate-900 max-w-3xl mx-auto">
           Public Departmental Agenda Portal
         </h1>
