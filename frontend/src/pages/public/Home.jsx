@@ -13,13 +13,13 @@ export default function Home() {
             <img
               src={logo}
               alt="Logo"
-              className="w-12 h-12 object-contain"
+              className="w-20 h-20 object-contain"
             />
 
             {/* Optional name beside logo */}
-            <span className="font-bold text-slate-900 text-lg hidden sm:block">
+            {/* <span className="font-bold text-slate-900 text-lg hidden sm:block">
               Agenda Portal
-            </span>
+            </span> */}
           </div>
 
           <Link
