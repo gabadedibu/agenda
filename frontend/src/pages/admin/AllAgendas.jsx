@@ -58,7 +58,7 @@ export default function AllAgendas() {
     fetchAgendas();
   }, [status]);
 
-  // 🔥 ARCHIVE
+  // ✅ ARCHIVE
   const archiveAgenda = async (id) => {
     if (!confirm("Archive this agenda?")) return;
 
@@ -70,19 +70,19 @@ export default function AllAgendas() {
     }
   };
 
-  // 🔥 UNARCHIVE (reuse update)
+  // 🔥 FIXED UNARCHIVE
   const unarchiveAgenda = async (id) => {
     if (!confirm("Unarchive this agenda?")) return;
 
     try {
-      await api.patch(`/agendas/${id}`, { status: "approved", publicVisible: true });
+      await api.patch(`/agendas/${id}/unarchive`); // ✅ FIX HERE
       fetchAgendas();
     } catch (err) {
       alert(err.response?.data?.message);
     }
   };
 
-  // 🔥 DELETE (only archived)
+  // ✅ DELETE
   const deleteAgenda = async (id) => {
     if (!confirm("Delete permanently? This cannot be undone")) return;
 
