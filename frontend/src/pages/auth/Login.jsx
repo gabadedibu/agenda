@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const message = location.state?.message;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,7 +23,6 @@ export default function Login() {
 
       const role = await login(email, password);
 
-      // redirect based on role
       if (role === "admin") {
         navigate("/admin");
       } else if (role === "department_head") {
@@ -46,6 +48,14 @@ export default function Login() {
           Login to manage agendas
         </p>
 
+        {/* Message from ProtectedRoute */}
+        {message && (
+          <div className="bg-amber-50 text-amber-700 text-sm p-3 rounded-lg mt-4">
+            {message}
+          </div>
+        )}
+
+        {/* Error */}
         {error && (
           <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mt-4">
             {error}
@@ -71,11 +81,19 @@ export default function Login() {
 
           <button
             disabled={loading}
-            className="w-full bg-slate-950 text-white py-3 rounded-xl font-semibold"
+            className="w-full bg-slate-950 text-white py-3 rounded-xl font-semibold disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        {/* Go Home Button */}
+        <Link
+          to="/"
+          className="block text-center w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold mt-4 hover:bg-slate-200 transition"
+        >
+          Go to Homepage
+        </Link>
       </div>
     </main>
   );

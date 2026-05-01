@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const Department = require("../models/Department");
 const User = require("../models/User");
+const Agenda = require("../models/Agenda");
 const AuditLog = require("../models/AuditLog");
 
 exports.createDepartment = async (req, res) => {
@@ -38,16 +39,8 @@ exports.createDepartmentWithHead = async (req, res) => {
       temporaryPassword,
     } = req.body;
 
-    if (
-      !departmentName ||
-      !departmentCode ||
-      !headName ||
-      !headEmail ||
-      !temporaryPassword
-    ) {
-      return res.status(400).json({
-        message: "All required fields must be provided",
-      });
+    if (!departmentName || !departmentCode || !headName || !headEmail || !temporaryPassword) {
+      return res.status(400).json({ message: "All required fields must be provided" });
     }
 
     const existingDepartment = await Department.findOne({
@@ -58,9 +51,7 @@ exports.createDepartmentWithHead = async (req, res) => {
     });
 
     if (existingDepartment) {
-      return res.status(400).json({
-        message: "Department name or code already exists",
-      });
+      return res.status(400).json({ message: "Department name or code already exists" });
     }
 
     const existingUser = await User.findOne({
@@ -68,9 +59,7 @@ exports.createDepartmentWithHead = async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: "A user with this email already exists",
-      });
+      return res.status(400).json({ message: "A user with this email already exists" });
     }
 
     const department = await Department.create({
@@ -98,18 +87,13 @@ exports.createDepartmentWithHead = async (req, res) => {
       action: "CREATE_DEPARTMENT_WITH_HEAD",
       entityType: "Department",
       entityId: department._id,
-      description: `Created ${department.name} and assigned ${head.name} as department head`,
+      description: `Created ${department.name} and assigned ${head.name}`,
     });
 
     res.status(201).json({
-      message: "Department and department head created successfully",
+      message: "Department and head created successfully",
       department,
-      head: {
-        _id: head._id,
-        name: head.name,
-        email: head.email,
-        role: head.role,
-      },
+      head,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -140,7 +124,7 @@ exports.updateDepartment = async (req, res) => {
         description,
         isActive,
       },
-      { new: true, runValidators: true }
+      { new: true }
     );
 
     if (!department) {
@@ -166,17 +150,10 @@ exports.assignHead = async (req, res) => {
     const { headId } = req.body;
 
     const department = await Department.findById(req.params.id);
-
-    if (!department) {
-      return res.status(404).json({ message: "Department not found" });
-    }
-
     const user = await User.findById(headId);
 
-    if (!user || user.role !== "department_head") {
-      return res.status(400).json({
-        message: "User must be a department head",
-      });
+    if (!department || !user || user.role !== "department_head") {
+      return res.status(400).json({ message: "Invalid head" });
     }
 
     department.headId = headId;
@@ -187,16 +164,73 @@ exports.assignHead = async (req, res) => {
 
     await AuditLog.create({
       userId: req.user._id,
-      action: "ASSIGN_DEPARTMENT_HEAD",
+      action: "ASSIGN_HEAD",
       entityType: "Department",
       entityId: department._id,
-      description: `Assigned ${user.name} as head of ${department.name}`,
+      description: `Assigned ${user.name}`,
     });
 
-    res.json({
-      message: "Department head assigned",
-      department,
+    res.json({ message: "Head assigned", department });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+// 🔥 NEW: Reset head password
+exports.resetHeadPassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    const department = await Department.findById(req.params.id);
+
+    if (!department || !department.headId) {
+      return res.status(404).json({ message: "Department or head not found" });
+    }
+
+    const user = await User.findById(department.headId);
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.json({ message: "Head password reset successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
+// 🔥 NEW: Delete department safely
+exports.deleteDepartment = async (req, res) => {
+  try {
+    const department = await Department.findById(req.params.id);
+
+    if (!department) {
+      return res.status(404).json({ message: "Department not found" });
+    }
+
+    const agendas = await Agenda.find({ departmentId: department._id });
+
+    if (agendas.length > 0) {
+      return res.status(400).json({
+        message: "Cannot delete department with existing agendas",
+      });
+    }
+
+    await department.deleteOne();
+
+    await AuditLog.create({
+      userId: req.user._id,
+      action: "DELETE_DEPARTMENT",
+      entityType: "Department",
+      entityId: department._id,
+      description: `Deleted department ${department.name}`,
     });
+
+    res.json({ message: "Department deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

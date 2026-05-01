@@ -58,7 +58,9 @@ router.patch("/me", protect, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (name) user.name = name;
+    if (typeof name === "string" && name.trim()) {
+  user.name = name.trim();
+}
 
     if (newPassword) {
       if (!currentPassword) {

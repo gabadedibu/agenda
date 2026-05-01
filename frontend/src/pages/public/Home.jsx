@@ -1,18 +1,18 @@
 import { Link } from "react-router-dom";
-import { ClipboardList } from "lucide-react";
+import logo from "../../assets/logo.png";
 
 export default function Home() {
   return (
     <main className="min-h-screen bg-slate-50">
+      {/* NAV */}
       <nav className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* LOGO AREA */}
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-              <ClipboardList className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-white font-bold text-sm">
+             <img src={logo} alt="Logo" className="w-10 h-10 object-contain" />
             </div>
-            <span className="font-bold text-slate-900">
-              Agenda Management System
-            </span>
+         
           </div>
 
           <Link
@@ -24,14 +24,22 @@ export default function Home() {
         </div>
       </nav>
 
+      {/* HERO */}
       <section className="max-w-6xl mx-auto px-6 py-20 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold text-slate-900 max-w-3xl mx-auto">
+        {/* LOGO BIG */}
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-lg font-bold">
+            
+          </div>
+        </div>
+
+        <h1 className="text-3xl md:text-5xl font-bold text-slate-900 max-w-3xl mx-auto">
           Public Departmental Agenda Portal
         </h1>
 
         <p className="text-slate-600 mt-5 max-w-2xl mx-auto leading-7">
-          View approved departmental agendas, progress updates, and supporting
-          public documents from one central platform.
+          Access approved departmental agendas and verified updates in one
+          transparent and centralized platform.
         </p>
 
         <div className="mt-8">
@@ -42,21 +50,6 @@ export default function Home() {
             View Approved Agendas
           </Link>
         </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-6 pb-16 grid md:grid-cols-3 gap-5">
-        {[
-          "Approved agendas only",
-          "Progress updates",
-          "Downloadable public documents",
-        ].map((item) => (
-          <div
-            key={item}
-            className="bg-white border border-slate-200 rounded-2xl p-6 text-center"
-          >
-            <p className="font-semibold text-slate-800">{item}</p>
-          </div>
-        ))}
       </section>
     </main>
   );

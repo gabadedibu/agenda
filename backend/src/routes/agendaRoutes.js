@@ -15,6 +15,7 @@ const {
   getPublicAgendas,
   getPublicAgendaDetails,
   archiveAgenda,
+  deleteAgenda,
 } = require("../controllers/agendaController");
 
 const router = express.Router();
@@ -49,5 +50,6 @@ router.delete(
 router.get("/", protect, authorize("admin"), getAllAgendas);
 router.patch("/:id/review", protect, authorize("admin"), reviewAgenda);
 router.patch("/:id/archive", protect, authorize("admin"), archiveAgenda);
+router.delete("/:id", protect, authorize("admin"), deleteAgenda);
 
 module.exports = router;

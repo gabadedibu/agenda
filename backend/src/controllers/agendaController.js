@@ -348,6 +348,38 @@ exports.archiveAgenda = async (req, res) => {
   }
 };
 
+exports.deleteAgenda = async (req, res) => {
+  try {
+    const agenda = await Agenda.findById(req.params.id);
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
+
+    if (agenda.status !== "archived") {
+      return res.status(400).json({
+        message: "Only archived agendas can be deleted",
+      });
+    }
+
+    await agenda.deleteOne();
+
+    await AuditLog.create({
+      userId: req.user._id,
+      action: "DELETE_AGENDA",
+      entityType: "Agenda",
+      entityId: agenda._id,
+      description: `Deleted agenda: ${agenda.title}`,
+    });
+
+    res.json({
+      message: "Agenda deleted permanently",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getPublicAgendaDetails = async (req, res) => {
   try {
     const Attachment = require("../models/Attachment");
