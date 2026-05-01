@@ -99,13 +99,7 @@ export default function AgendaDetails() {
             <ArrowLeft className="w-4 h-4" />
             Back to agendas
           </Link>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-emerald-400 text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to homepage
-          </Link>
+         
 
           <div className="mt-8">
             <span className="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full">
@@ -201,9 +195,9 @@ export default function AgendaDetails() {
           </div>
         </div>
 
-        {/* <aside className="space-y-6">
+        <aside className="space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-5">
-            <h2 className="font-bold text-slate-900">Downloads</h2>
+            {/* <h2 className="font-bold text-slate-900">Downloads</h2>
 
             {attachments.length === 0 ? (
               <p className="text-sm text-slate-500 mt-3">
@@ -215,9 +209,16 @@ export default function AgendaDetails() {
                   <FileActions key={file._id} file={file} />
                 ))}
               </div>
-            )}
+            )} */}
+             <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-emerald-400 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to homepage
+          </Link>
           </div>
-        </aside> */}
+        </aside>
       </section>
     </main>
   );
