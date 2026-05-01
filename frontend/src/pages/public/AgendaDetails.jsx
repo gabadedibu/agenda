@@ -99,13 +99,13 @@ export default function AgendaDetails() {
             <ArrowLeft className="w-4 h-4" />
             Back to agendas
           </Link>
-             {/* Go Home Button */}
-        <Link
-          to="/"
-          className="block text-center w-full bg-slate-100 text-slate-700 py-3 rounded-xl font-semibold mt-4 hover:bg-slate-200 transition"
-        >
-          Go to Homepage
-        </Link>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-emerald-400 text-sm"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to homepage
+          </Link>
 
           <div className="mt-8">
             <span className="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full">
