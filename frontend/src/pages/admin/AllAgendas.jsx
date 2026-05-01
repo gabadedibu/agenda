@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  ClipboardList,
   RefreshCw,
-  Search,
   Eye,
   Clock,
   CheckCircle,
@@ -58,7 +56,6 @@ export default function AllAgendas() {
     fetchAgendas();
   }, [status]);
 
-  // ✅ ARCHIVE
   const archiveAgenda = async (id) => {
     if (!confirm("Archive this agenda?")) return;
 
@@ -66,23 +63,22 @@ export default function AllAgendas() {
       await api.patch(`/agendas/${id}/archive`);
       fetchAgendas();
     } catch (err) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Failed to archive");
     }
   };
 
-  // 🔥 FIXED UNARCHIVE
   const unarchiveAgenda = async (id) => {
     if (!confirm("Unarchive this agenda?")) return;
 
     try {
-      await api.patch(`/agendas/${id}/unarchive`); // ✅ FIX HERE
+      await api.patch(`/agendas/${id}/unarchive`);
       fetchAgendas();
+      alert("Agenda restored successfully");
     } catch (err) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Failed to unarchive");
     }
   };
 
-  // ✅ DELETE
   const deleteAgenda = async (id) => {
     if (!confirm("Delete permanently? This cannot be undone")) return;
 
@@ -91,7 +87,7 @@ export default function AllAgendas() {
       setAgendas((prev) => prev.filter((a) => a._id !== id));
       alert("Deleted successfully");
     } catch (err) {
-      alert(err.response?.data?.message);
+      alert(err.response?.data?.message || "Failed to delete");
     }
   };
 
