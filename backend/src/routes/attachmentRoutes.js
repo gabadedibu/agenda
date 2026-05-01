@@ -2,7 +2,6 @@ const express = require("express");
 const protect = require("../middleware/authMiddleware");
 const upload = require("../middleware/uploadMiddleware");
 
-
 const {
   uploadAgendaAttachment,
   uploadUpdateAttachment,
@@ -16,20 +15,19 @@ const router = express.Router();
 router.post(
   "/agenda/:agendaId",
   protect,
-  upload.single("file"),
+  upload.array("files", 5),
   uploadAgendaAttachment
 );
 
 router.post(
   "/update/:updateId",
   protect,
-  upload.single("file"),
+  upload.array("files", 5),
   uploadUpdateAttachment
 );
 
 router.get("/agenda/:agendaId", getAgendaAttachments);
 router.get("/preview/:attachmentId", previewAttachment);
 router.get("/download/:attachmentId", downloadAttachment);
-
 
 module.exports = router;

@@ -10,6 +10,8 @@ import {
   XCircle,
   AlertCircle,
   Archive,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 import api from "../../api/axios";
 
@@ -40,7 +42,6 @@ export default function AllAgendas() {
   const fetchAgendas = async () => {
     try {
       setLoading(true);
-
       const params = new URLSearchParams();
       if (status) params.append("status", status);
 
@@ -57,178 +58,138 @@ export default function AllAgendas() {
     fetchAgendas();
   }, [status]);
 
-  const archiveAgenda = async (agendaId) => {
-    const confirmArchive = confirm(
-      "Archive this agenda? It will no longer appear on the public page."
-    );
-
-    if (!confirmArchive) return;
+  // 🔥 ARCHIVE
+  const archiveAgenda = async (id) => {
+    if (!confirm("Archive this agenda?")) return;
 
     try {
-      await api.patch(`/agendas/${agendaId}/archive`);
-
-      setAgendas((prev) =>
-        prev.map((agenda) =>
-          agenda._id === agendaId
-            ? { ...agenda, status: "archived", publicVisible: false }
-            : agenda
-        )
-      );
-
-      alert("Agenda archived successfully");
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to archive agenda");
+      await api.patch(`/agendas/${id}/archive`);
+      fetchAgendas();
+    } catch (err) {
+      alert(err.response?.data?.message);
     }
   };
 
-  const filteredAgendas = agendas.filter((agenda) => {
-    const text = `${agenda.title} ${agenda.summary} ${agenda.departmentId?.name} ${agenda.createdBy?.name}`.toLowerCase();
+  // 🔥 UNARCHIVE (reuse update)
+  const unarchiveAgenda = async (id) => {
+    if (!confirm("Unarchive this agenda?")) return;
+
+    try {
+      await api.patch(`/agendas/${id}`, { status: "approved", publicVisible: true });
+      fetchAgendas();
+    } catch (err) {
+      alert(err.response?.data?.message);
+    }
+  };
+
+  // 🔥 DELETE (only archived)
+  const deleteAgenda = async (id) => {
+    if (!confirm("Delete permanently? This cannot be undone")) return;
+
+    try {
+      await api.delete(`/agendas/${id}`);
+      setAgendas((prev) => prev.filter((a) => a._id !== id));
+      alert("Deleted successfully");
+    } catch (err) {
+      alert(err.response?.data?.message);
+    }
+  };
+
+  const filtered = agendas.filter((a) => {
+    const text = `${a.title} ${a.summary}`.toLowerCase();
     return text.includes(search.toLowerCase());
   });
 
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">All Agendas</h1>
-            <p className="text-slate-500 mt-2">
-              Monitor all departmental agendas across every status.
-            </p>
-          </div>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">All Agendas</h1>
 
-          <button
-            onClick={fetchAgendas}
-            className="inline-flex items-center justify-center gap-2 bg-white border border-slate-200 px-4 py-3 rounded-xl font-semibold text-sm"
-          >
+          <button onClick={fetchAgendas} className="bg-white px-4 py-2 rounded-xl border">
             <RefreshCw className="w-4 h-4" />
-            Refresh
           </button>
         </div>
 
-        <section className="mt-8 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row gap-3">
-          <div className="flex-1 flex items-center gap-2 border border-slate-200 rounded-xl px-3">
-            <Search className="w-5 h-5 text-slate-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by title, department, or creator..."
-              className="w-full py-3 outline-none text-sm"
-            />
-          </div>
+        <div className="mt-6 flex gap-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search..."
+            className="border px-4 py-2 rounded-xl w-full"
+          />
 
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="border border-slate-200 rounded-xl px-4 py-3 text-sm bg-white"
+            className="border px-4 py-2 rounded-xl"
           >
-            <option value="">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-            <option value="needs_revision">Needs Revision</option>
+            <option value="">All</option>
             <option value="archived">Archived</option>
           </select>
-        </section>
+        </div>
 
-        {loading ? (
-          <p className="mt-8 text-slate-500">Loading agendas...</p>
-        ) : filteredAgendas.length === 0 ? (
-          <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-10 text-center">
-            <ClipboardList className="w-10 h-10 mx-auto text-slate-300" />
-            <p className="font-semibold text-slate-700 mt-3">
-              No agenda found
-            </p>
-          </div>
-        ) : (
-          <div className="mt-8 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-            <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
-              <div className="col-span-4">Agenda</div>
-              <div className="col-span-2">Department</div>
-              <div className="col-span-2">Creator</div>
-              <div className="col-span-2">Status</div>
-              <div className="col-span-1">Priority</div>
-              <div className="col-span-1 text-right">Action</div>
-            </div>
+        <div className="mt-6 space-y-4">
+          {filtered.map((agenda) => {
+            const Icon = statusIcon[agenda.status];
 
-            <div className="divide-y divide-slate-100">
-              {filteredAgendas.map((agenda) => {
-                const Icon = statusIcon[agenda.status] || AlertCircle;
-
-                return (
-                  <div
-                    key={agenda._id}
-                    className="grid md:grid-cols-12 gap-4 px-5 py-4 items-center"
-                  >
-                    <div className="md:col-span-4">
-                      <h2 className="font-bold text-slate-900">
-                        {agenda.title}
-                      </h2>
-                      <p className="text-sm text-slate-500 mt-1 line-clamp-2">
-                        {agenda.summary}
-                      </p>
-                    </div>
-
-                    <div className="md:col-span-2 text-sm text-slate-600">
-                      {agenda.departmentId?.name || "N/A"}
-                    </div>
-
-                    <div className="md:col-span-2 text-sm text-slate-600">
-                      {agenda.createdBy?.name || "N/A"}
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <span
-                        className={`inline-flex items-center gap-2 text-xs font-bold px-3 py-1 rounded-full ${
-                          statusStyle[agenda.status] ||
-                          "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5" />
-                        {agenda.status.replace("_", " ")}
-                      </span>
-                    </div>
-
-                    <div className="md:col-span-1 text-sm capitalize text-slate-600">
-                      {agenda.priority}
-                    </div>
-
-                    <div className="md:col-span-1 md:text-right flex md:justify-end gap-2 flex-wrap">
-                      {agenda.status === "pending" ? (
-                        <Link
-                          to="/admin/pending-agendas"
-                          className="inline-flex items-center justify-center gap-1 bg-slate-950 text-white px-3 py-2 rounded-xl text-xs font-semibold"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Review
-                        </Link>
-                      ) : agenda.status === "approved" ? (
-                        <Link
-                          to={`/agendas/${agenda._id}`}
-                          className="inline-flex items-center justify-center gap-1 bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl text-xs font-semibold"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Public
-                        </Link>
-                      ) : null}
-
-                      {agenda.status !== "archived" && (
-                        <button
-                          onClick={() => archiveAgenda(agenda._id)}
-                          className="inline-flex items-center justify-center gap-1 bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs font-semibold"
-                        >
-                          <Archive className="w-3.5 h-3.5" />
-                          Archive
-                        </button>
-                      )}
-                    </div>
+            return (
+              <div key={agenda._id} className="bg-white p-4 rounded-xl border">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="font-bold">{agenda.title}</h2>
+                    <p className="text-sm text-gray-500">{agenda.summary}</p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
+                  <span className={`px-3 py-1 text-xs rounded ${statusStyle[agenda.status]}`}>
+                    <Icon className="inline w-3 h-3 mr-1" />
+                    {agenda.status}
+                  </span>
+                </div>
+
+                <div className="flex gap-2 mt-4 flex-wrap">
+                  {agenda.status !== "archived" && (
+                    <button
+                      onClick={() => archiveAgenda(agenda._id)}
+                      className="bg-red-50 text-red-700 px-3 py-2 rounded-xl text-xs"
+                    >
+                      <Archive className="w-3 h-3 inline mr-1" />
+                      Archive
+                    </button>
+                  )}
+
+                  {agenda.status === "archived" && (
+                    <>
+                      <button
+                        onClick={() => unarchiveAgenda(agenda._id)}
+                        className="bg-emerald-50 text-emerald-700 px-3 py-2 rounded-xl text-xs"
+                      >
+                        <RotateCcw className="w-3 h-3 inline mr-1" />
+                        Unarchive
+                      </button>
+
+                      <button
+                        onClick={() => deleteAgenda(agenda._id)}
+                        className="bg-red-600 text-white px-3 py-2 rounded-xl text-xs"
+                      >
+                        <Trash2 className="w-3 h-3 inline mr-1" />
+                        Delete
+                      </button>
+                    </>
+                  )}
+
+                  <Link
+                    to={`/agendas/${agenda._id}`}
+                    className="bg-slate-900 text-white px-3 py-2 rounded-xl text-xs"
+                  >
+                    <Eye className="w-3 h-3 inline mr-1" />
+                    View
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </main>
   );

@@ -5,6 +5,8 @@ const Agenda = require("../models/Agenda");
 const AgendaUpdate = require("../models/AgendaUpdate");
 const AuditLog = require("../models/AuditLog");
 
+
+// 🔥 MULTIPLE FILE UPLOAD FOR AGENDA
 exports.uploadAgendaAttachment = async (req, res) => {
   try {
     const { visibility = "public" } = req.body;
@@ -22,37 +24,43 @@ exports.uploadAgendaAttachment = async (req, res) => {
       return res.status(403).json({ message: "Not allowed to upload to this agenda" });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const attachment = await Attachment.create({
-      fileName: req.file.originalname,
-      fileUrl: `/uploads/agendas/${req.file.filename}`,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
-      uploadedBy: req.user._id,
-      agendaId: agenda._id,
-      visibility,
-    });
+    const attachments = await Promise.all(
+      req.files.map((file) =>
+        Attachment.create({
+          fileName: file.originalname,
+          fileUrl: `/uploads/agendas/${file.filename}`,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          uploadedBy: req.user._id,
+          agendaId: agenda._id,
+          visibility,
+        })
+      )
+    );
 
     await AuditLog.create({
       userId: req.user._id,
       action: "UPLOAD_AGENDA_ATTACHMENT",
       entityType: "Attachment",
-      entityId: attachment._id,
-      description: `Uploaded file to agenda: ${agenda.title}`,
+      entityId: attachments[0]._id,
+      description: `Uploaded ${attachments.length} file(s) to agenda: ${agenda.title}`,
     });
 
     res.status(201).json({
-      message: "File uploaded successfully",
-      attachment,
+      message: "Files uploaded successfully",
+      attachments,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
+// 🔥 MULTIPLE FILE UPLOAD FOR UPDATE
 exports.uploadUpdateAttachment = async (req, res) => {
   try {
     const { visibility = "public" } = req.body;
@@ -72,38 +80,44 @@ exports.uploadUpdateAttachment = async (req, res) => {
       return res.status(403).json({ message: "Not allowed to upload to this update" });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
     }
 
-    const attachment = await Attachment.create({
-      fileName: req.file.originalname,
-      fileUrl: `/uploads/updates/${req.file.filename}`,
-      fileType: req.file.mimetype,
-      fileSize: req.file.size,
-      uploadedBy: req.user._id,
-      agendaId: agenda._id,
-      updateId: update._id,
-      visibility,
-    });
+    const attachments = await Promise.all(
+      req.files.map((file) =>
+        Attachment.create({
+          fileName: file.originalname,
+          fileUrl: `/uploads/updates/${file.filename}`,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          uploadedBy: req.user._id,
+          agendaId: agenda._id,
+          updateId: update._id,
+          visibility,
+        })
+      )
+    );
 
     await AuditLog.create({
       userId: req.user._id,
       action: "UPLOAD_UPDATE_ATTACHMENT",
       entityType: "Attachment",
-      entityId: attachment._id,
-      description: `Uploaded file to agenda update`,
+      entityId: attachments[0]._id,
+      description: `Uploaded ${attachments.length} file(s) to agenda update`,
     });
 
     res.status(201).json({
-      message: "Update file uploaded successfully",
-      attachment,
+      message: "Files uploaded successfully",
+      attachments,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
+// 🔥 EXISTING FUNCTIONS (unchanged)
 exports.getAgendaAttachments = async (req, res) => {
   try {
     const agenda = await Agenda.findById(req.params.agendaId);
@@ -131,6 +145,8 @@ exports.getAgendaAttachments = async (req, res) => {
   }
 };
 
+
+// 🔥 PREVIEW
 exports.previewAttachment = async (req, res) => {
   try {
     const attachment = await Attachment.findById(req.params.attachmentId).populate("agendaId");
@@ -166,6 +182,8 @@ exports.previewAttachment = async (req, res) => {
   }
 };
 
+
+// 🔥 DOWNLOAD
 exports.downloadAttachment = async (req, res) => {
   try {
     const attachment = await Attachment.findById(req.params.attachmentId).populate("agendaId");

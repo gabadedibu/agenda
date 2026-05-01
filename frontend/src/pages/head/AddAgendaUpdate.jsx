@@ -1,26 +1,17 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Upload, Pencil, Trash2, Save, X } from "lucide-react";
 import api from "../../api/axios";
 import BackButton from "../../components/BackButton";
 
 export default function AddAgendaUpdate() {
   const { id } = useParams();
-  const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    title: "",
-    content: "",
-  });
-
+  const [form, setForm] = useState({ title: "", content: "" });
   const [updates, setUpdates] = useState([]);
   const [editingUpdateId, setEditingUpdateId] = useState(null);
-  const [editForm, setEditForm] = useState({
-    title: "",
-    content: "",
-  });
-
-  const [file, setFile] = useState(null);
+  const [editForm, setEditForm] = useState({ title: "", content: "" });
+  const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [updatesLoading, setUpdatesLoading] = useState(true);
   const [error, setError] = useState("");
@@ -30,8 +21,6 @@ export default function AddAgendaUpdate() {
       setUpdatesLoading(true);
       const res = await api.get(`/agendas/public/${id}`);
       setUpdates(res.data.updates || []);
-    } catch (err) {
-      console.error(err);
     } finally {
       setUpdatesLoading(false);
     }
@@ -40,13 +29,6 @@ export default function AddAgendaUpdate() {
   useEffect(() => {
     fetchUpdates();
   }, [id]);
-
-  const handleChange = (e) => {
-    setForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,26 +40,19 @@ export default function AddAgendaUpdate() {
       const res = await api.post(`/agendas/${id}/updates`, form);
       const updateId = res.data.update._id;
 
-      if (file) {
+      if (files.length > 0) {
         const formData = new FormData();
-        formData.append("file", file);
+        files.forEach((file) => formData.append("files", file));
         formData.append("visibility", "public");
 
         await api.post(`/attachments/update/${updateId}`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         });
       }
 
       alert("Agenda update added successfully");
-
-      setForm({
-        title: "",
-        content: "",
-      });
-      setFile(null);
-
+      setForm({ title: "", content: "" });
+      setFiles([]);
       fetchUpdates();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to add update");
@@ -86,33 +61,9 @@ export default function AddAgendaUpdate() {
     }
   };
 
-  const startEdit = (update) => {
-    setEditingUpdateId(update._id);
-    setEditForm({
-      title: update.title,
-      content: update.content,
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingUpdateId(null);
-    setEditForm({
-      title: "",
-      content: "",
-    });
-  };
-
-  const handleEditChange = (e) => {
-    setEditForm((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
   const saveEdit = async (updateId) => {
     try {
       await api.patch(`/agendas/updates/${updateId}`, editForm);
-
       alert("Update edited successfully");
       setEditingUpdateId(null);
       fetchUpdates();
@@ -122,17 +73,12 @@ export default function AddAgendaUpdate() {
   };
 
   const deleteUpdate = async (updateId) => {
-    const confirmDelete = confirm(
-      "Delete this update? This action cannot be undone."
-    );
-
-    if (!confirmDelete) return;
+    if (!confirm("Delete this update?")) return;
 
     try {
       await api.delete(`/agendas/updates/${updateId}`);
-
-      alert("Update deleted successfully");
       setUpdates((prev) => prev.filter((update) => update._id !== updateId));
+      alert("Update deleted successfully");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to delete update");
     }
@@ -144,13 +90,7 @@ export default function AddAgendaUpdate() {
         <BackButton label="Back to my agendas" />
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-          <h1 className="text-2xl font-bold text-slate-900">
-            Add Agenda Update
-          </h1>
-
-          <p className="text-slate-500 text-sm mt-2">
-            Add progress notes and optionally attach a receipt, PDF, or image.
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Add Agenda Update</h1>
 
           {error && (
             <div className="mt-5 bg-red-50 text-red-600 text-sm p-3 rounded-xl">
@@ -159,54 +99,41 @@ export default function AddAgendaUpdate() {
           )}
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Update Title
-              </label>
+            <input
+              name="title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+              placeholder="Update title"
+              className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm"
+            />
+
+            <textarea
+              name="content"
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              required
+              rows="6"
+              placeholder="Write the update here..."
+              className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm resize-none"
+            />
+
+            <label className="flex items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:bg-slate-50">
+              <Upload className="w-5 h-5 text-slate-500" />
+              <span className="text-sm text-slate-600">
+                {files.length > 0
+                  ? `${files.length} file(s) selected`
+                  : "Choose PDF, PNG, JPG, or JPEG"}
+              </span>
+
               <input
-                name="title"
-                value={form.title}
-                onChange={handleChange}
-                required
-                placeholder="e.g. Receipt for nails purchased"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm"
+                type="file"
+                multiple
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={(e) => setFiles(Array.from(e.target.files))}
+                className="hidden"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Update Details
-              </label>
-              <textarea
-                name="content"
-                value={form.content}
-                onChange={handleChange}
-                required
-                rows="6"
-                placeholder="Write the full update here..."
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Attach File Optional
-              </label>
-
-              <label className="flex items-center justify-center gap-3 border-2 border-dashed border-slate-200 rounded-xl p-5 cursor-pointer hover:bg-slate-50">
-                <Upload className="w-5 h-5 text-slate-500" />
-                <span className="text-sm text-slate-600">
-                  {file ? file.name : "Choose PDF, PNG, JPG, or JPEG"}
-                </span>
-
-                <input
-                  type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
-                  onChange={(e) => setFile(e.target.files[0])}
-                  className="hidden"
-                />
-              </label>
-            </div>
+            </label>
 
             <button
               disabled={loading}
@@ -218,9 +145,7 @@ export default function AddAgendaUpdate() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mt-6">
-          <h2 className="text-xl font-bold text-slate-900">
-            Existing Updates
-          </h2>
+          <h2 className="text-xl font-bold text-slate-900">Existing Updates</h2>
 
           {updatesLoading ? (
             <p className="text-slate-500 mt-4">Loading updates...</p>
@@ -229,25 +154,24 @@ export default function AddAgendaUpdate() {
           ) : (
             <div className="mt-5 space-y-4">
               {updates.map((update) => (
-                <div
-                  key={update._id}
-                  className="border border-slate-200 rounded-2xl p-4"
-                >
+                <div key={update._id} className="border border-slate-200 rounded-2xl p-4">
                   {editingUpdateId === update._id ? (
                     <div className="space-y-3">
                       <input
-                        name="title"
                         value={editForm.title}
-                        onChange={handleEditChange}
-                        className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm"
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, title: e.target.value })
+                        }
+                        className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm"
                       />
 
                       <textarea
-                        name="content"
                         value={editForm.content}
-                        onChange={handleEditChange}
+                        onChange={(e) =>
+                          setEditForm({ ...editForm, content: e.target.value })
+                        }
                         rows="4"
-                        className="w-full border border-slate-200 rounded-xl px-4 py-3 outline-none text-sm resize-none"
+                        className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none"
                       />
 
                       <div className="flex gap-3">
@@ -260,7 +184,7 @@ export default function AddAgendaUpdate() {
                         </button>
 
                         <button
-                          onClick={cancelEdit}
+                          onClick={() => setEditingUpdateId(null)}
                           className="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold"
                         >
                           <X className="w-4 h-4" />
@@ -270,21 +194,20 @@ export default function AddAgendaUpdate() {
                     </div>
                   ) : (
                     <>
-                      <h3 className="font-bold text-slate-900">
-                        {update.title}
-                      </h3>
-
-                      <p className="text-xs text-slate-400 mt-1">
-                        {new Date(update.createdAt).toLocaleString()}
-                      </p>
-
+                      <h3 className="font-bold text-slate-900">{update.title}</h3>
                       <p className="text-sm text-slate-600 mt-3 whitespace-pre-line">
                         {update.content}
                       </p>
 
                       <div className="flex gap-3 mt-4">
                         <button
-                          onClick={() => startEdit(update)}
+                          onClick={() => {
+                            setEditingUpdateId(update._id);
+                            setEditForm({
+                              title: update.title,
+                              content: update.content,
+                            });
+                          }}
                           className="inline-flex items-center gap-2 bg-slate-950 text-white px-4 py-2 rounded-xl text-sm font-semibold"
                         >
                           <Pencil className="w-4 h-4" />
