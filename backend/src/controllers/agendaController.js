@@ -2,7 +2,6 @@ const Agenda = require("../models/Agenda");
 const AgendaUpdate = require("../models/AgendaUpdate");
 const AuditLog = require("../models/AuditLog");
 
-// CREATE
 exports.createAgenda = async (req, res) => {
   try {
     const { title, summary, description, proposedDate, priority } = req.body;
@@ -29,7 +28,6 @@ exports.createAgenda = async (req, res) => {
   }
 };
 
-// MY AGENDAS
 exports.getMyAgendas = async (req, res) => {
   try {
     const agendas = await Agenda.find({ createdBy: req.user._id })
@@ -42,7 +40,6 @@ exports.getMyAgendas = async (req, res) => {
   }
 };
 
-// UPDATE
 exports.updateMyAgenda = async (req, res) => {
   try {
     const agenda = await Agenda.findOne({
@@ -56,7 +53,7 @@ exports.updateMyAgenda = async (req, res) => {
 
     if (!["draft", "needs_revision", "rejected"].includes(agenda.status)) {
       return res.status(400).json({
-        message: "Only draft/revision/rejected agendas can be edited",
+        message: "Only draft, rejected, or revision agendas can be edited",
       });
     }
 
@@ -76,7 +73,6 @@ exports.updateMyAgenda = async (req, res) => {
   }
 };
 
-// SUBMIT
 exports.submitAgenda = async (req, res) => {
   try {
     const agenda = await Agenda.findOne({
@@ -84,10 +80,12 @@ exports.submitAgenda = async (req, res) => {
       createdBy: req.user._id,
     });
 
-    if (!agenda) return res.status(404).json({ message: "Agenda not found" });
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
 
     if (!["draft", "needs_revision", "rejected"].includes(agenda.status)) {
-      return res.status(400).json({ message: "Cannot submit now" });
+      return res.status(400).json({ message: "Agenda cannot be submitted now" });
     }
 
     agenda.status = "pending";
@@ -96,13 +94,12 @@ exports.submitAgenda = async (req, res) => {
 
     await agenda.save();
 
-    res.json({ message: "Submitted for approval", agenda });
+    res.json({ message: "Agenda submitted for approval", agenda });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// ADMIN GET ALL
 exports.getAllAgendas = async (req, res) => {
   try {
     const { status } = req.query;
@@ -111,8 +108,8 @@ exports.getAllAgendas = async (req, res) => {
     if (status) filter.status = status;
 
     const agendas = await Agenda.find(filter)
-      .populate("departmentId", "name")
-      .populate("createdBy", "name")
+      .populate("departmentId", "name code")
+      .populate("createdBy", "name email")
       .sort({ createdAt: -1 });
 
     res.json({ agendas });
@@ -121,73 +118,168 @@ exports.getAllAgendas = async (req, res) => {
   }
 };
 
-// REVIEW
 exports.reviewAgenda = async (req, res) => {
   try {
-    const { action } = req.body;
+    const { action, feedback } = req.body;
 
     const agenda = await Agenda.findById(req.params.id);
-    if (!agenda) return res.status(404).json({ message: "Not found" });
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
 
     if (agenda.status !== "pending") {
-      return res.status(400).json({ message: "Not pending" });
+      return res.status(400).json({ message: "Only pending agendas can be reviewed" });
     }
 
     if (action === "approve") {
       agenda.status = "approved";
       agenda.publicVisible = true;
+      agenda.adminFeedback = feedback || "Approved";
     } else if (action === "reject") {
       agenda.status = "rejected";
       agenda.publicVisible = false;
+      agenda.adminFeedback = feedback || "Rejected";
     } else if (action === "revision") {
       agenda.status = "needs_revision";
       agenda.publicVisible = false;
+      agenda.adminFeedback = feedback || "Revision required";
+    } else {
+      return res.status(400).json({ message: "Invalid review action" });
     }
 
     await agenda.save();
 
-    res.json({ message: "Reviewed", agenda });
+    res.json({ message: `Agenda ${action} successful`, agenda });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// ARCHIVE
+exports.addAgendaUpdate = async (req, res) => {
+  try {
+    const agenda = await Agenda.findById(req.params.id);
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
+
+    if (agenda.status !== "approved") {
+      return res.status(400).json({ message: "Only approved agendas can receive updates" });
+    }
+
+    if (String(agenda.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "You can only update your own agenda" });
+    }
+
+    const { title, content } = req.body;
+
+    const update = await AgendaUpdate.create({
+      agendaId: agenda._id,
+      title,
+      content,
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json({ message: "Agenda update added", update });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateAgendaUpdate = async (req, res) => {
+  try {
+    const update = await AgendaUpdate.findById(req.params.updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    if (String(update.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not allowed to edit this update" });
+    }
+
+    const { title, content } = req.body;
+
+    update.title = title ?? update.title;
+    update.content = content ?? update.content;
+
+    await update.save();
+
+    res.json({ message: "Update edited successfully", update });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAgendaUpdate = async (req, res) => {
+  try {
+    const update = await AgendaUpdate.findById(req.params.updateId);
+
+    if (!update) {
+      return res.status(404).json({ message: "Update not found" });
+    }
+
+    if (String(update.createdBy) !== String(req.user._id)) {
+      return res.status(403).json({ message: "Not allowed to delete this update" });
+    }
+
+    await update.deleteOne();
+
+    res.json({ message: "Update deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getPublicAgendas = async (req, res) => {
+  try {
+    const { department, priority, search } = req.query;
+
+    const filter = {
+      status: "approved",
+      publicVisible: true,
+    };
+
+    if (priority) filter.priority = priority;
+    if (department) filter.departmentId = department;
+
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { summary: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const agendas = await Agenda.find(filter)
+      .populate("departmentId", "name code")
+      .sort({ createdAt: -1 });
+
+    res.json({ agendas });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.archiveAgenda = async (req, res) => {
   try {
     const agenda = await Agenda.findById(req.params.id);
-    if (!agenda) return res.status(404).json({ message: "Not found" });
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
 
     agenda.status = "archived";
     agenda.publicVisible = false;
 
     await agenda.save();
 
-    res.json({ message: "Archived", agenda });
+    res.json({ message: "Agenda archived successfully", agenda });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// 🔥 DELETE (only archived)
-exports.deleteAgenda = async (req, res) => {
-  try {
-    const agenda = await Agenda.findById(req.params.id);
-    if (!agenda) return res.status(404).json({ message: "Not found" });
-
-    if (agenda.status !== "archived") {
-      return res.status(400).json({ message: "Only archived can be deleted" });
-    }
-
-    await agenda.deleteOne();
-
-    res.json({ message: "Deleted permanently" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// 🔥 UNARCHIVE (NEW)
 exports.unarchiveAgenda = async (req, res) => {
   try {
     const agenda = await Agenda.findById(req.params.id);
@@ -207,17 +299,73 @@ exports.unarchiveAgenda = async (req, res) => {
 
     await agenda.save();
 
-    await AuditLog.create({
-      userId: req.user._id,
-      action: "UNARCHIVE_AGENDA",
-      entityType: "Agenda",
-      entityId: agenda._id,
-      description: `Unarchived agenda: ${agenda.title}`,
-    });
-
     res.json({
       message: "Agenda unarchived successfully",
       agenda,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAgenda = async (req, res) => {
+  try {
+    const agenda = await Agenda.findById(req.params.id);
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
+
+    if (agenda.status !== "archived") {
+      return res.status(400).json({
+        message: "Only archived agendas can be deleted",
+      });
+    }
+
+    await agenda.deleteOne();
+
+    res.json({ message: "Agenda deleted permanently" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getPublicAgendaDetails = async (req, res) => {
+  try {
+    const Attachment = require("../models/Attachment");
+
+    const agenda = await Agenda.findOne({
+      _id: req.params.id,
+      status: "approved",
+      publicVisible: true,
+    }).populate("departmentId", "name code");
+
+    if (!agenda) {
+      return res.status(404).json({ message: "Agenda not found" });
+    }
+
+    const updates = await AgendaUpdate.find({ agendaId: agenda._id })
+      .populate("createdBy", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const updateIds = updates.map((update) => update._id);
+
+    const updateAttachments = await Attachment.find({
+      updateId: { $in: updateIds },
+      visibility: "public",
+    }).lean();
+
+    const updatesWithAttachments = updates.map((update) => ({
+      ...update,
+      attachments: updateAttachments.filter(
+        (file) => String(file.updateId) === String(update._id)
+      ),
+    }));
+
+    res.json({
+      agenda,
+      updates: updatesWithAttachments,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
